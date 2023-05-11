@@ -62,7 +62,7 @@ public class WxPayConfig {
     }
 
     @Bean
-    public ScheduledUpdateCertificatesVerifier getVerifier(){
+    public ScheduledUpdateCertificatesVerifier getVerifier() {
 
         // 获取商户私钥
         PrivateKey privateKey = getPrivateKey(privateKeyPath);
@@ -79,10 +79,10 @@ public class WxPayConfig {
     }
 
     @Bean
-   public CloseableHttpClient getWxPayClient(ScheduledUpdateCertificatesVerifier verifier) {
+    public CloseableHttpClient getWxPayClient(ScheduledUpdateCertificatesVerifier verifier) {
 
-       // 获取商户私钥
-       PrivateKey privateKey = getPrivateKey(privateKeyPath);
+        // 获取商户私钥
+        PrivateKey privateKey = getPrivateKey(privateKeyPath);
 
         WechatPayHttpClientBuilder builder = WechatPayHttpClientBuilder.create()
                 .withMerchant(mchId, mchSerialNo, privateKey)
