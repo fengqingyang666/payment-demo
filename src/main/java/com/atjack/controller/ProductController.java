@@ -36,4 +36,5 @@ public class ProductController {
 
         return R.ok().data("productlist", list);
     }
+
 }
