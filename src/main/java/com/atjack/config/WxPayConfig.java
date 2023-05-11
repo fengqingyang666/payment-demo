@@ -1,13 +1,21 @@
 package com.atjack.config;
 
+import com.wechat.pay.contrib.apache.httpclient.WechatPayHttpClientBuilder;
+import com.wechat.pay.contrib.apache.httpclient.auth.PrivateKeySigner;
+import com.wechat.pay.contrib.apache.httpclient.auth.ScheduledUpdateCertificatesVerifier;
+import com.wechat.pay.contrib.apache.httpclient.auth.WechatPay2Credentials;
+import com.wechat.pay.contrib.apache.httpclient.auth.WechatPay2Validator;
 import com.wechat.pay.contrib.apache.httpclient.util.PemUtil;
 import lombok.Data;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 
 /**
@@ -51,5 +59,38 @@ public class WxPayConfig {
         } catch (FileNotFoundException e) {
             throw new RuntimeException("私钥文件不存在", e);
         }
+    }
+
+    @Bean
+    public ScheduledUpdateCertificatesVerifier getVerifier(){
+
+        // 获取商户私钥
+        PrivateKey privateKey = getPrivateKey(privateKeyPath);
+
+        PrivateKeySigner privateKeySigner = new PrivateKeySigner(mchSerialNo, privateKey);
+
+        WechatPay2Credentials wechatPay2Credentials = new WechatPay2Credentials(mchId, privateKeySigner);
+
+        ScheduledUpdateCertificatesVerifier verifier = new ScheduledUpdateCertificatesVerifier(
+                wechatPay2Credentials, apiV3Key.getBytes(StandardCharsets.UTF_8)
+        );
+
+        return verifier;
+    }
+
+    @Bean
+   public CloseableHttpClient getWxPayClient(ScheduledUpdateCertificatesVerifier verifier) {
+
+       // 获取商户私钥
+       PrivateKey privateKey = getPrivateKey(privateKeyPath);
+
+        WechatPayHttpClientBuilder builder = WechatPayHttpClientBuilder.create()
+                .withMerchant(mchId, mchSerialNo, privateKey)
+                .withValidator(new WechatPay2Validator(verifier));
+
+// 通过WechatPayHttpClientBuilder构造的HttpClient，会自动的处理签名和验签，并进行证书自动更新
+        CloseableHttpClient httpClient = builder.build();
+
+        return httpClient;
     }
 }
